@@ -1,5 +1,5 @@
 from tkinter import *
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageFont, ImageDraw
 from tkinter.filedialog import askopenfile
 
 
@@ -15,6 +15,7 @@ def display_logo(url, row, column):
 
 
 def open_file():
+    global read_img_label, read_img, resized_image
     browse_text.set("loading...")
     file = askopenfile(parent=root, mode="rb",
                        title="Choose a file", filetypes=[
@@ -25,11 +26,44 @@ def open_file():
         read_img = Image.open(file)
         read_img = read_img.resize(
             (int(read_img.size[0]/5), int(read_img.size[1]/5)))
-        read_img = ImageTk.PhotoImage(read_img)
-        read_img_label = Label(image=read_img)
-        read_img_label.image = read_img
-        read_img_label.grid(column=0, row=2, sticky=SW, padx=25, pady=25)
+        resized_image = ImageTk.PhotoImage(read_img)
+        read_img_label = Label(image=resized_image)
+        read_img_label.image = resized_image
+        read_img_label.grid(column=0, row=2, rowspan=3,
+                            sticky=SW, padx=25, pady=25)
         browse_text.set("Browse")
+        return read_img
+
+
+def add_text():
+    # Define font
+    text_font = ImageFont.load_default()
+    # get text to add to image
+    text_to_add = my_entry.get()
+
+    # Edit the Image
+    edit_image = ImageDraw.Draw(read_img)
+    edit_image.text((700, 600), text_to_add, ("white"), font=text_font)
+
+    # Save the Image
+    read_img.save("image2.png")
+
+    # Clear the entry box
+    my_entry.delete(0, END)
+    my_entry.insert(0, "Saving File...")
+
+    # Wait a few seconds and then show image
+    read_img_label.after(2000, show_pic)
+
+
+def show_pic():
+    global image2
+    # SHow new Image
+    image2 = PhotoImage(file="image2.png")
+    read_img_label.config(image=image2)
+
+    # Clear the entry box
+    my_entry.delete(0, END)
 
 
 root = Tk()
@@ -39,7 +73,7 @@ header.grid(columnspan=3, rowspan=2, row=0)
 
 # main content area - image extraction
 main_content = Frame(root, width=800, height=250)
-main_content.grid(columnspan=3, rowspan=2, row=2)
+main_content.grid(columnspan=3, rowspan=3, row=2)
 
 # logo
 display_logo('tomato.png', 0, 0)
@@ -57,5 +91,14 @@ browse_btn = Button(root, textvariable=browse_text, command=lambda: open_file(),
 browse_text.set("Browse")
 browse_btn.grid(column=2, row=1, sticky=NE, padx=50)
 
+# Entry text
+
+my_entry = Entry(root, font=("Ubuntu", 24))
+my_entry.grid(column=1, row=2, sticky=SW)
+
+# ADD Button
+my_button = Button(root, text="Add text to Image",
+                   command=add_text, font=("Ubuntu", 24))
+my_button.grid(column=1, row=3, sticky=SW)
 
 root.mainloop()
